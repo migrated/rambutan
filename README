@@ -1,0 +1,33 @@
+The following instructions are for a makefile install. You don't need
+system privileges.
+
+If you are not on a GNU/Linux or other Unix-like system, you will need
+to adapt the following.
+
+1) In the makefile, change BIN and TEXINPUTS into sensible things for
+   your system.
+
+   For example, on my machines, I have
+       BIN = $(HOME)/Local/bin/
+       TEXINPUTS = $(HOME)/Local/tex/
+   Accordingly, I have $HOME/Local/bin/ on my $path and also
+       setenv TEXINPUTS \
+       .:$HOME/Local/tex//:/usr/share/texmf/tex//:/usr/share/texmf/pdftex//:
+   in my .cshrc file.
+
+2) Type "make install" and then "make clean".
+
+3) Type "rehash" to tell the system there are new executables.
+
+4) Test by typing "javatangle Manual Manual".  This should produce the
+   file Primes.java, which you can compile with "javac Primes.java"
+   and then run with "appletviewer primes.html".
+
+5) For the manual, type "javaweave Manual Manual" to get
+   Manual.tex, which you can pdftex or tex.  This document is both
+   example and manual, and there is no separate man page.
+
+
+The src/ directory contains the files necessary to make rambutan using
+Normal Ramsay's spiderweb system.  Spiderweb itself is in
+/ctan/web/spiderweb/src/ in CTAN.

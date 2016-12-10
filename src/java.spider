@@ -1,0 +1,364 @@
+language Java extension java
+
+at_sign @
+
+comment begin <"//"> end newline
+macros begin
+%---------------JAVA-SPECIFIC STUFF-------------------------------------
+\def\commentbegin{\ldots} \def\commentend{}
+macros end
+
+line begin <"//"-space-"line"> end <"">
+
+#-----------Token definitions-------------------------------
+
+token newline category newline translation <>
+
+default translation <*> mathness yes
+
+token identifier category simp
+token number category num
+token newline category newline mathness maybe translation <>
+token pseudo_semi category semi mathness maybe translation <"\\relax">
+
+token /** category bjd tangleto <"/**"-space> translation <"\\BJD">
+token /*  category bjc tangleto <"/*"-space> translation <"\\BJC">
+token */  category ejd tangleto <space-"*/"-space> translation <"\\EJD">
+
+module definition moddef use compstmt
+
+token + category unorbinop tangleto <"+"-space>
+token - category unorbinop tangleto <dash-space>
+token * category star tangleto <space-"*">
+token / category binop tangleto <space-"/">
+#                     avoid inadvertant /* */
+token % category binop translation <"\\%">
+token ++ category incop translation <"\\PP">
+token -- category incop translation <"\\MM">
+
+token = category equals translation <"\\leftarrow"> tangleto <"="-space>
+token += category binop translation <"\\PE"> tangleto <"+="-space>
+token -= category binop translation <"\\ME"> tangleto <dash-"="-space>
+#                                                   avoid inadvertant =-
+
+token <  category lthan
+token >  category gthan
+token <= category binop translation <"\\L">
+token >= category binop translation <"\\G">
+token == category binop translation <"\\S">
+token != category binop translation <"\\I">
+token !  category unop translation <"\\neg">
+token &  category unorbinop translation <"\\amp">
+token |  category unorbinop
+token ^  category binop translation <"\\^">
+token && category binop translation <"\\W">
+token || category binop translation <"\\V">
+
+token ~  category unop translation <"\\TI">
+token << category unop translation <"\\LL">
+# token >> category unop translation <"\\GG">
+# token >>> category unop translation <"\\GGG">
+
+token ? category question translation <"\\?">
+token . category dot
+token : category colon
+
+token ( category lparen
+token ) category rparen
+token [ category lsquare
+token ] category rsquare
+token { translation <"\\LB"> category lbrace
+token } translation <"\\RB"> category rbrace
+token , category comma
+token ; category semi
+
+macros begin
+\def\LB{\leavevmode\hbox to 1em{\{\hfil}}
+\def\RB{\leavevmode\hbox to 1em{\}\hfil}}
+\def\PP{\mathord{++}}
+\def\MM{\mathord{--}}
+\def\PE{\buildrel+\over{\leftarrow}}
+\def\ME{\buildrel-\over{\leftarrow}}
+\def\LL{\mathrel{<\!<}}
+\def\LT#1{\.{<}}
+\def\GT#1{\.{>}}
+\def\GG#1#2{\mathrel{>\!>}}
+\def\GGG#1#2#3{\mathrel{>\!>\!>}}
+\let\openbraces=\{
+\let\closebraces=\}
+\def\{{\ifmmode\openbraces\else$\openbraces$\fi}
+\def\}{\ifmmode\closebraces\else$\closebraces$\fi}
+\def\?{\mathrel?}
+\def\s{\ }
+\def\setfilefonts{\let\\=\. \let\|=\. \let\&=\.}
+macros end
+
+#-----------Reserved words-------------------------------
+
+ilk int_like category int
+reserved int ilk int_like
+reserved void ilk int_like
+reserved long ilk int_like
+reserved short ilk int_like
+reserved float ilk int_like
+reserved double ilk int_like
+reserved boolean ilk int_like
+reserved char ilk int_like
+reserved byte ilk int_like
+
+ilk this_like category simp
+reserved this ilk this_like
+reserved super ilk this_like
+reserved true ilk this_like
+reserved false ilk this_like
+reserved null ilk this_like
+reserved break ilk this_like
+
+ilk return_like category return
+reserved return ilk return_like
+
+ilk default_like category def
+reserved default ilk default_like
+
+default translation <*-"\\"-space>
+
+ilk try_like category try
+reserved try ilk try_like
+reserved finally ilk try_like
+
+ilk public_like category public
+reserved public ilk public_like
+reserved protected ilk public_like
+reserved private ilk public_like
+
+ilk static_like category static
+reserved static ilk static_like
+reserved abstract ilk static_like
+reserved final ilk static_like
+reserved volatile ilk static_like
+reserved transient ilk static_like
+reserved native ilk static_like
+
+ilk class_like category class
+reserved class ilk class_like
+reserved interface ilk class_like
+
+ilk extends_like category extends translation <"\\"-space-"\\30"-*-"\\"-space>
+reserved extends ilk extends_like
+reserved implements ilk extends_like
+reserved throws ilk extends_like
+
+ilk if_like category if
+reserved if ilk if_like
+
+ilk else_like category else
+reserved else ilk else_like
+
+ilk switch_like category switch
+reserved switch ilk switch_like
+
+ilk catch_like category catch
+reserved catch ilk catch_like
+
+ilk while_like category while
+reserved while ilk while_like
+
+ilk for_like category for
+reserved for ilk for_like
+
+ilk do_like category do
+reserved do ilk do_like
+
+ilk sync_like category sync
+reserved synchronized ilk sync_like
+
+ilk throw_like category throw
+reserved throw ilk throw_like
+
+ilk new_like category new
+reserved new ilk new_like
+
+ilk case_like category case
+reserved case ilk case_like
+
+ilk import_like category import
+reserved import ilk import_like
+reserved package ilk import_like
+
+ilk instanceof_like category instanceof
+reserved instanceof ilk instanceof_like
+
+ilk unk_like category unk
+reserved var ilk unk_like
+reserved continue ilk unk_like
+
+#-----------Productions rules-------------------------------
+
+? ignore_scrap --> #1
+? newline --> #1
+
+moddef <force> ? --> #2
+
+# declarations
+(int|simp) <"\\"-space> simp --> decl
+int lsquare <"\\"-","> rsquare --> int
+simp lsquare <"\\"-","> rsquare --> simp
+decl lsquare <"\\"-","> rsquare --> decl
+decl comma <"\\39"> (int|simp) <"\\"-space> simp --> decl
+decl comma <"\\39"> simp --> decl
+
+# produce lvalues
+simp lparen --> simplparen
+simplparen (expr|compstmt) rparen --> simp
+simplparen rparen --> simp
+(simp|expr|cast) lsquare --> simplsquare
+simplsquare expr rsquare --> simp
+(simp|expr) dot simp --> simp
+
+# produce exprs
+(unop|unorbinop) expr --> expr
+(expr|decl) (equals|binop|unorbinop) expr --> expr
+expr incop --> expr
+incop simp --> expr
+expr comma <"\\39"> expr --> expr
+lparen expr rparen --> expr
+[ lparen simp rparen ] dot --> expr dot
+lparen (int|simp) rparen --> cast
+cast <"\\"-space> expr --> expr
+star --> binop
+expr question expr colon expr --> expr
+lbrace <indent> expr <outdent-"\\kern.5em"> rbrace --> expr
+expr dot simp --> expr
+
+
+# more unusual exprs
+simp <"\\"-space> instanceof (simp|int) --> inst
+inst lsquare <"\\"-","> rsquare --> inst
+inst --> expr
+num <"{\\SC"> simp unorbinop num <"}"> --> num
+num <"{\\SC"> simp <"}"> --> num
+num simp --> num
+num --> expr
+
+# generics
+simp <"\\LT"> lthan (int|simp|question) <"\\GT"> gthan --> simp
+simp <"\\LT"> lthan question extends simp  <"\\GT"> gthan --> simp
+[ simp <"\\LT"> lthan ] simp lthan --> simplthan simp lthan
+simplthan [ simp <"\\LT"> lthan ] --> simplthan simplthan
+simplthan question extends simp --> simplsimp
+simplthan (int|simp|question) --> simplsimp
+simp <"\\LT"> lthan (int|simp|question) comma --> simplthan
+simp <"\\LT"> lthan question extends simp --> simplsimp
+simp <"\\LT"> lthan (int|simp) lsquare rsquare --> simplsimp
+simplsimp comma --> simplthan
+simplsimp lsquare rsquare --> simplsimp
+simplsimp <"\\GT"> gthan --> simp
+
+# because of generics
+<"\\GGG"> gthan gthan gthan --> unop
+<"\\GG"> gthan gthan --> unop
+(lthan|gthan) --> binop
+
+# if nothing else
+simp --> expr
+
+# assign
+<"\\buildrel"> (binop|unorbinop) <"\\over{"> equals <"}"> --> equals
+
+return semi --> stmt
+(return|throw) <"\\"-space> expr --> expr
+
+new (int|simp) --> simp
+
+# statements
+(expr|decl) semi --> stmt
+semi --> stmt
+stmt <break_space> stmt --> stmt
+
+# compound statements
+<"\\"-space> lbrace <"\\"-space-"\\"-space> rbrace --> stmt
+lbrace <indent-cancel> stmt <outdent-force> rbrace --> compstmt
+lbrace <indent-cancel> compstmt <outdent-force> rbrace --> compstmt
+compstmt <force> stmt --> stmt
+(stmt|compstmt) <force> compstmt --> compstmt
+
+try semi --> compstmt
+try <indent-break_space> stmt <outdent> --> compstmt
+try <indent-force> compstmt <outdent> --> compstmt
+
+switch (expr|cast) --> try
+while --> switch
+catch lparen decl rparen --> try
+
+for lparen stmt <"\\"-space> expr rparen --> try
+for lparen stmt rparen --> try
+
+[ sync ] lparen --> switch lparen
+[ sync ] (simp|int) --> static (simp|int)
+
+do <indent> stmt while --> dowhile
+do <indent-force> compstmt while --> dowhile
+dowhile (expr|cast) --> dowhile
+dowhile stmt <outdent-force> --> compstmt
+
+# if statement
+if (expr|cast) <indent> --> ifcond
+ifcond <"\\"-space> stmt <outdent-force> --> ifclause
+ifcond <force> compstmt <outdent-force> --> ifclause
+ifclause else if --> if
+ifclause else <indent> --> elsecond
+ifclause --> compstmt
+elsecond stmt <outdent-force> --> compstmt
+elsecond <force> compstmt <outdent-force> --> compstmt
+
+# case statement
+case expr colon <indent> --> casec
+def colon <indent> --> casec
+casec <break_space> stmt --> casec
+compcasec <force> stmt --> casec
+(casec|compcasec) <force> compstmt --> compcasec
+(casec|compcasec) <outdent-force> casec --> casec
+[ (casec|compcasec) <outdent> ] rbrace --> stmt rbrace
+
+# function declarations
+(public|static) int --> int
+(public|static) simp --> simp
+decl lparen rparen --> try
+simplparen decl rparen --> try
+decl lparen decl rparen --> try
+try extends simp --> try
+try comma simp --> try
+[ expr ] lparen decl rparen --> try lparen decl rparen
+[ expr ] lbrace --> try lbrace
+static try --> try
+public try --> try
+
+
+# class declarations
+static class --> class
+public class --> class
+class simp --> class
+class extends simp --> class
+class comma simp --> class
+[ class ] lbrace --> try lbrace
+
+
+# misc
+import simp --> impsimp
+impsimp dot (simp|star) --> impsimp
+impsimp semi --> compstmt
+
+bjd ejd <force> --> stmt
+bjd ? --> bjd
+
+macros begin
+\def\gulp#1{}
+\def\SC{\let\|\gulp\def\\##1{\gulp##1}\cdot10^\bgroup\aftergroup\egroup}
+\def\BJCD{\relax$\begingroup
+          \def\\##1{ ##1}\edef\&##1##2{ \&{##1}}\let\|\\}
+\def\BJC{\BJCD\tentex/*\kern.5em\IG} \def\BJD{\BJCD\tentex/**\kern.5em\IG}
+\def\EJD{\kern.5em*/\endgroup$\relax}
+\let\IG\ignorespaces
+%---------------END JAVA-SPECIFIC STUFF---------------------------------
+macros end
+
